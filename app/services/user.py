@@ -1,5 +1,6 @@
 from sqlalchemy.exc import NoResultFound
 
+from models.Enum.user_role import UserRole
 from models.user import User
 from typing import List, Optional
 
@@ -22,12 +23,10 @@ def get_user_by_email(email:str, session) -> Optional[User]:
         return user
     return None
 
-def change_user_role(user_id: int, new_role: str, session) -> Optional[User]:
-    user = session.get(User, user_id)
+def change_user_role(id: int, new_role: UserRole, session) -> Optional[User]:
+    user = session.query(User).filter(User.id == id).first()
     if user:
         user.role = new_role
-        session.commit()
-        session.refresh(user)
         return user
     return None
 

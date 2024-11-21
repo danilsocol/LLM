@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from database.database import get_session
+from models.Enum.user_role import UserRole
 from models.organization import Organization
+from models.requests import CreateOrgRequest
 from services.organization import (
     create_organization,
     get_organization_by_id,
@@ -10,14 +12,24 @@ from services.organization import (
     add_coins_to_organization,
     add_user_to_organization,
     remove_user_from_organization,
+    remove_organization
 )
+from services.user import (change_user_role,get_users_by_organization)
 
 router = APIRouter()
 
 @router.post("/organizations/", response_model=Organization)
-async def create_new_organization(organization: Organization, session: Session = Depends(get_session)):
-    create_organization(organization, session)
-    return organization
+async def create_new_organization(organization_req: CreateOrgRequest, session: Session = Depends(get_session)):
+    org = create_organization(organization_req.organization, session)
+    updated_user = change_user_role(organization_req.user_id, UserRole.ORG_ADMIN, session)
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User  not found")
+
+    add_user_to_organization(organization_req.user_id, org.id, session)
+
+    session.commit()
+    session.refresh(org)
+    return org
 
 @router.get("/organizations/{organization_id}", response_model=Organization)
 async def get_organization(organization_id: int, session: Session = Depends(get_session)):
@@ -40,9 +52,9 @@ async def update_name(organization_id: int, new_name: str, session: Session = De
         raise HTTPException(status_code=404, detail="Organization not found")
     return organization
 
-@router.put("/organizations/{organization_id}/coins", response_model=Organization)
-async def add_coins(organization_id: int, coins_to_add: int, session: Session = Depends(get_session)):
-    organization = add_coins_to_organization(organization_id, coins_to_add, session)
+@router.patch("/organizations/{organization_id}/coins", response_model=Organization)
+async def add_coins(organization_id: int, coins: int, session: Session = Depends(get_session)):
+    organization = add_coins_to_organization(organization_id, coins, session)
     if not organization:
         raise HTTPException(status_code=404, detail="Organization not found")
     return organization
@@ -60,3 +72,25 @@ async def remove_user(organization_id: int, user_id: int, session: Session = Dep
     if not organization:
         raise HTTPException(status_code=404, detail="Organization or user not found")
     return organization
+
+@router.post("/organizations/{organization_id}/leave")
+async def leave_organization(organization_id: int, user_id: int, session: Session = Depends(get_session)):
+    removed = remove_user_from_organization(user_id, organization_id, session)
+    if not removed:
+        raise HTTPException(status_code=404, detail="User  not found in organization")
+
+    session.commit()
+    return {"detail": "User  successfully left the organization"}
+
+
+@router.delete("/organizations/{organization_id}")
+async def leave_organization(organization_id: int, session: Session = Depends(get_session)):
+    users = get_users_by_organization(organization_id, session)
+
+    for user in users:
+        change_user_role(user.id, UserRole.NONE, session)
+
+    remove_organization(organization_id, session)
+
+    session.commit()
+    return {"detail": "Organization and all associated users successfully removed"}

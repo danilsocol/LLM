@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 class User(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    role: UserRole = Field(default=UserRole.USER)
+    role: UserRole = Field(default=UserRole.NONE)
     email: str = Field(index=True, unique=True)
     password: str
 

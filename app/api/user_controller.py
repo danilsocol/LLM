@@ -3,16 +3,16 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from database.database import get_session
+from models.requests import LoginRequest
 from models.user import User
 from services.user import (
     get_all_users,
     get_user_by_id,
     get_user_by_email,
-    create_user,
-    get_users_by_organization, change_user_role,
+    register_user,
+    get_users_by_organization, change_user_role, login_user,
 )
 
-from app.services.user import register_user, login_user
 
 router = APIRouter()
 
@@ -48,13 +48,16 @@ async def update_user_role(user_id: int, new_role: str, session: Session = Depen
     return updated_user
 
 @router.post("/users/register/", response_model=User)
-async def register_new_user(email: str, password: str, session: Session = Depends(get_session)):
-    registered_user = register_user(email,password, session)
+async def register_new_user(request: LoginRequest, session: Session = Depends(get_session)):
+    print(request.email,request.password)
+    registered_user = register_user(request.email,request.password, session)
+    print(registered_user)
     return registered_user
 
 @router.post("/users/login/", response_model=User)
-async def login(email: str, password: str, session: Session = Depends(get_session)):
-    user = login_user(email, password, session)
+async def login(request: LoginRequest, session: Session = Depends(get_session)):
+    user = login_user(request.email, request.password, session)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return user
+
