@@ -46,8 +46,8 @@ export const createOrganization = async (organization,user_id) => {
     }
 };
 
-export const addCoinsToOrganization = async (organizationId, coins) => {
-    const response = await axios.patch(`${API_URL}/organizations/${organizationId}/coins`, { coins });
+export const addCoinsToOrganization = async (organization_id, coins) => {
+    const response = await axios.post(`${API_URL}/organizations/${organization_id}/coins`, { coins });
     return response.data;
 };
 
@@ -78,3 +78,11 @@ export const leaveOrganization = async (userId, orgId) => {
         throw error;
     }
 };
+
+export async function addUserToOrganization(organizationId, adminId, userId) {
+    const response = await axios.post(`/organizations/${organizationId}/users/${userId}`, {
+        admin_id: adminId,
+        user_id: userId
+    });
+    return response.data;
+}

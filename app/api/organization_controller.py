@@ -3,7 +3,7 @@ from sqlmodel import Session
 from database.database import get_session
 from models.Enum.user_role import UserRole
 from models.organization import Organization
-from models.requests import CreateOrgRequest
+from models.requests import (CreateOrgRequest,CoinRequest)
 from services.organization import (
     create_organization,
     get_organization_by_id,
@@ -14,7 +14,9 @@ from services.organization import (
     remove_user_from_organization,
     remove_organization
 )
-from services.user import (change_user_role,get_users_by_organization)
+from services.user import (change_user_role,get_users_by_organization,get_user_by_id)
+
+from app.models.user import User
 
 router = APIRouter()
 
@@ -52,19 +54,26 @@ async def update_name(organization_id: int, new_name: str, session: Session = De
         raise HTTPException(status_code=404, detail="Organization not found")
     return organization
 
-@router.patch("/organizations/{organization_id}/coins", response_model=Organization)
-async def add_coins(organization_id: int, coins: int, session: Session = Depends(get_session)):
-    organization = add_coins_to_organization(organization_id, coins, session)
+@router.post("/organizations/{organization_id}/coins", response_model=Organization)
+async def add_coins(organization_id: int, coin_request: CoinRequest, session: Session = Depends(get_session)):
+    organization = add_coins_to_organization(organization_id,coin_request.coins, session)
     if not organization:
         raise HTTPException(status_code=404, detail="Organization not found")
     return organization
 
-@router.post("/organizations/{organization_id}/users/{user_id}", response_model=Organization)
-async def add_user(organization_id: int, user_id: int, session: Session = Depends(get_session)):
-    organization = add_user_to_organization(organization_id, user_id, session)
-    if not organization:
-        raise HTTPException(status_code=404, detail="Organization or user not found")
-    return organization
+@router.post("/organizations/{organization_id}/users/{user_id}", response_model=User)
+async def add_user(organization_id: int, admin_id : int , user_id: int, session: Session = Depends(get_session)):
+    admin = get_user_by_id(admin_id, session)
+    if(admin and
+            (admin.role == UserRole.ORG_ADMIN
+             or admin.role == UserRole.ADMIN) and admin.organization_id == organization_id):
+        user = add_user_to_organization(organization_id, user_id, session)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        return user
+    else:
+        raise HTTPException(status_code=403, detail="You are not an admin")
+
 
 @router.delete("/organizations/{organization_id}/users/{user_id}", response_model=Organization)
 async def remove_user(organization_id: int, user_id: int, session: Session = Depends(get_session)):

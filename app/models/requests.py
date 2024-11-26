@@ -10,3 +10,6 @@ class LoginRequest(BaseModel):
 class CreateOrgRequest(BaseModel):
     organization: Organization
     user_id: int
+
+class CoinRequest(BaseModel):
+    coins: int

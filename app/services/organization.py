@@ -19,11 +19,13 @@ def update_organization_admin(organization_id: int, new_admin_id: int, session) 
         organization.admin_id = new_admin_id
         session.commit()
 
-def add_coins_to_organization(organization_id: int, coins_amount: int, session) -> None:
+def add_coins_to_organization(organization_id: int, coins_amount: int, session) -> Organization:
     organization = get_organization_by_id(organization_id, session)
     if organization:
         organization.coins += coins_amount
         session.commit()
+        session.refresh(organization)
+        return organization
 
 def update_organization_name(organization_id: int, new_name: str, session) -> None:
     organization = get_organization_by_id(organization_id, session)
@@ -33,8 +35,11 @@ def update_organization_name(organization_id: int, new_name: str, session) -> No
 
 def add_user_to_organization(user_id: int, organization_id: int, session) -> None:
     user = session.get(User, user_id)
-    if user:
+    if user and user.organization_id is None:
         user.organization_id = organization_id
+        session.commit()
+        session.refresh(user)
+        return user
 
 def remove_user_from_organization(user_id: int, session) -> None:
     user = session.get(User, user_id)

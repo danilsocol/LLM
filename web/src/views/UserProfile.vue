@@ -77,8 +77,8 @@ export default {
           const org = await createOrganization({ name: organizationName, coins: 0 }, await getUser ().id);
           this.organization = org;
           this.user.role = UserRole.ORG_ADMIN;
-          this.user.organizationId = org.id;
-          setUser (this.user);
+          this.user.organization_id = org.id;
+          setUser(this.user);
           alert("Организация успешно создана!");
         } catch (error) {
           console.error("Ошибка создания организации:", error);
@@ -90,7 +90,7 @@ export default {
       try {
         await leaveOrganization(this.user.id, this.organization.id);
         alert("Вы вышли из организации.");
-        this.user.organizationId = null;
+        this.user.organization_id = null;
         this.user.role = UserRole.NONE;
         setUser (this.user);
       } catch (error) {
@@ -104,7 +104,7 @@ export default {
           await deleteOrganization(this.organization.id);
           alert("Организация успешно удалена.");
           this.organization = null; // Обнуляем организацию после удаления
-          this.user.organizationId = null;
+          this.user.organization_id = null;
           this.user.role = UserRole.NONE;
           setUser (this.user);
         } catch (error) {
@@ -118,6 +118,8 @@ export default {
       if (coins && !isNaN(coins)) {
         try {
           console.log(this.organization);
+          console.log(coins);
+          console.log(parseInt(coins));
           await addCoinsToOrganization(this.organization.id, parseInt(coins));
           this.organization.coins += parseInt(coins);
           alert(`Койны успешно пополнены на ${coins}.`);
@@ -130,14 +132,10 @@ export default {
       }
     },
     async viewUsers() {
-      try {
-        const users = await getUsersByOrganization(this.organization.id);
-        console.log(users);
-        alert("Список пользователей: " + users.map(user => user.email).join(", "));
-      } catch (error) {
-        console.error("Ошибка получения списка пользователей:", error);
-        alert("Ошибка при получении списка пользователей. Попробуйте позже.");
-      }
+      this.$router.push({
+        name: 'OrganizationUsers',
+        params: { organizationId: this.organization.id }
+      });
     },
     async viewDocumentation() {
       try {
