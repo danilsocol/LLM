@@ -5,6 +5,10 @@
       <h2>Информация о пользователе</h2>
       <p><strong>Email:</strong> {{ user.email }}</p>
       <p><strong>Роль:</strong> {{ user.role }}</p>
+      <button @click="goToMyQueries">Просмотреть мои запросы</button>
+      <button @click="goToAddQuery" v-if="organization && organization.coins >= 20">Создать запрос</button>
+      <p v-else-if="organization && organization.coins < 20" class="error-message">Недостаточно монет для создания запроса (требуется 20).</p>
+
     </div>
 
     <div class="organization-info" v-if="organization">
@@ -13,6 +17,7 @@
       <p><strong>Монеты:</strong> {{ organization.coins }}</p>
 
       <button v-if="user.role === UserRole.ORG_ADMIN" @click="addCoins">Пополнить койны</button>
+      <button v-if="user.role === UserRole.ORG_ADMIN" @click="goToOrganizationQueries">История организации</button>
 
       <button @click="viewUsers">Список пользователей</button>
       <button @click="viewDocumentation">Список документации</button>
@@ -91,6 +96,7 @@ export default {
         await leaveOrganization(this.user.id, this.organization.id);
         alert("Вы вышли из организации.");
         this.user.organization_id = null;
+        this.organization = null
         this.user.role = UserRole.NONE;
         setUser (this.user);
       } catch (error) {
@@ -103,7 +109,7 @@ export default {
         try {
           await deleteOrganization(this.organization.id);
           alert("Организация успешно удалена.");
-          this.organization = null; // Обнуляем организацию после удаления
+          this.organization = null;
           this.user.organization_id = null;
           this.user.role = UserRole.NONE;
           setUser (this.user);
@@ -113,14 +119,20 @@ export default {
         }
       }
     },
+    async goToMyQueries() {
+      this.$router.push({ name: 'MyQueries' });
+    },
+    async goToOrganizationQueries() {
+      this.$router.push({ name: 'OrganizationQueries', params: { organizationId: this.organization.id } });
+    },
+    async goToAddQuery() {
+      this.$router.push({ name: 'AddQuery', params: { organizationId: this.organization.id } });
+    },
     async addCoins() {
       const coins = prompt("Введите количество койнов для пополнения:");
       if (coins && !isNaN(coins)) {
         try {
-          console.log(this.organization);
-          console.log(coins);
-          console.log(parseInt(coins));
-          await addCoinsToOrganization(this.organization.id, parseInt(coins));
+          await addCoinsToOrganization(this.user.id,this.organization.id, parseInt(coins));
           this.organization.coins += parseInt(coins);
           alert(`Койны успешно пополнены на ${coins}.`);
         } catch (error) {
@@ -138,14 +150,10 @@ export default {
       });
     },
     async viewDocumentation() {
-      try {
-        const documentation = await getDocumentationByOrganization(this.organization.id);
-        console.log(documentation);
-        alert("Список документации: " + documentation.map(doc => doc.title).join(", "));
-      } catch (error) {
-        console.error("Ошибка получения списка документации:", error);
-        alert("Ошибка при получении списка документации. Попробуйте позже.");
-      }
+      this.$router.push({
+        name: 'OrganizationDocuments',
+        params: { organizationId: this.organization.id }
+      });
     },
     async logout() {
       removeUser ();
@@ -195,5 +203,10 @@ button {
 
 button:hover {
   background-color: #0056b3;
+}
+
+.error-message {
+  color: red;
+  margin-top: 10px;
 }
 </style>

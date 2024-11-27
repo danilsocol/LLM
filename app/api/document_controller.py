@@ -12,6 +12,10 @@ from services.document import (
     get_documents_by_organization,
 )
 
+from models.requests import CreateDocumentRequest
+
+from services.document import delete_document_from_db
+
 router = APIRouter()
 
 @router.get("/documents/{document_id}", response_model=Document)
@@ -21,14 +25,18 @@ async def get_document(document_id: int, session: Session = Depends(get_session)
         raise HTTPException(status_code=404, detail="Document not found")
     return document
 
-@router.post("/documents/", response_model=Document)
-async def create_new_document(document: Document, session: Session = Depends(get_session)):
+@router.post("/organizations/{organization_id}/documents", response_model=Document)
+async def create_new_document(documentRequest: CreateDocumentRequest, session: Session = Depends(get_session)):
+    document = Document(title=documentRequest.title, content=documentRequest.content,
+                        organization_id=documentRequest.organization_id,
+                        modified_by_id=documentRequest.modified_by_id)
+
     create_document(document, session)
     return document
 
 @router.put("/documents/{document_id}", response_model=Document)
-async def update_existing_document(document_id: int, updated_document: Document, session: Session = Depends(get_session)):
-    document = update_document(document_id, updated_document, session)
+async def update_existing_document(document_id: int, documentRequest: CreateDocumentRequest, session: Session = Depends(get_session)):
+    document = update_document(document_id, documentRequest, session)
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
     return document
@@ -42,3 +50,12 @@ async def get_all_documents_route(session: Session = Depends(get_session)):
 async def get_organization_documents(organization_id: int, session: Session = Depends(get_session)):
     documents = get_documents_by_organization(organization_id, session)
     return documents
+
+@router.delete("/documents/{document_id}", status_code=204)
+async def delete_document(document_id: int, session: Session = Depends(get_session)):
+    document = get_document_by_id(document_id, session)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    delete_document_from_db(document, session)
+    return
