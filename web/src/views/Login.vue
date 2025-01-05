@@ -21,7 +21,7 @@
 
 <script>
 import { login } from '../services/api';
-import { setUser } from '../services/auth';
+import { setToken } from '../services/auth';
 import {User} from "@/models/models.js";
 
 export default {
@@ -40,15 +40,15 @@ export default {
       try {
         const response = await login(this.email, this.password);
 
-        const user = new User(
-            response.id,
-            response.role,
-            response.email,
-            response.password,
-            response.organization_id || null
-        );
+        // const user = new User(
+        //     response.id,
+        //     response.role,
+        //     response.email,
+        //     response.password,
+        //     response.organization_id || null
+        // );
 
-        setUser(user);
+        setToken(response.access_token);
         this.$router.push('/');
       } catch (error) {
         console.error("Ошибка входа:", error);

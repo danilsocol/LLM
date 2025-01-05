@@ -44,7 +44,6 @@ import {
   deleteDocumentFromOrganization
 } from "@/services/api.js";
 import { Document } from "@/models/models";
-import { getUser } from "@/services/auth";
 import DocumentForm from "@/components/DocumentForm.vue";
 
 export default {

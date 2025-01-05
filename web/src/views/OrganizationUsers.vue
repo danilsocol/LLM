@@ -23,9 +23,8 @@
 </template>
 
 <script>
-import {getUsersByOrganization, addUserToOrganization} from "@/services/api.js";
+import {getUsersByOrganization, addUserToOrganization, getCurrentUser} from "@/services/api.js";
 import { UserRole } from "@/models/models.js";
-import {getUser} from "@/services/auth.js";
 
 export default {
   data() {
@@ -53,7 +52,7 @@ export default {
       const userId = prompt("Введите id пользователя для добавления:");
       if (parseInt(userId)) {
         try {
-          const admin = getUser()
+          const admin = await getCurrentUser()
           await addUserToOrganization(this.$route.params.organizationId, admin.id, parseInt(userId));
           alert("Пользователь добавлен успешно!");
           this.users = await getUsersByOrganization(this.$route.params.organizationId);

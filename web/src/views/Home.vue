@@ -32,7 +32,8 @@
 </template>
 
 <script>
-import {getUser, removeUser} from '../services/auth';
+import {removeToken} from '../services/auth';
+import {getCurrentUser} from "@/services/api.js";
 
 export default {
   data() {
@@ -45,13 +46,13 @@ export default {
       return this.user !== null;
     },
   },
-  mounted() {
-    this.user = getUser();
+  async mounted() {
+    this.user = await getCurrentUser();
   },
   methods: {
     logout() {
       this.user = null
-      removeUser();
+      removeToken();
     }
   }
 };

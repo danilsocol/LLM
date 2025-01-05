@@ -1,7 +1,9 @@
 import axios from 'axios';
 import {User} from "@/models/models.js";
+import {getToken} from "@/services/auth.js";
 
 const API_URL = 'http://localhost:8080/api';
+const token = getToken();
 
 const api = axios.create({
     baseURL: API_URL,
@@ -9,6 +11,28 @@ const api = axios.create({
         'Content-Type': 'application/json',
     },
 });
+
+api.interceptors.request.use(config => {
+    const token = getToken();
+    if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+}, error => {
+    return Promise.reject(error);
+});
+
+
+export const getCurrentUser = async () => {
+    try {
+        console.log(api.headers)
+        const response = await api.get(`/me/`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 
 export const login = async (email, password) => {
     try {
@@ -47,17 +71,17 @@ export const createOrganization = async (organization,user_id) => {
 };
 
 export const addCoinsToOrganization = async (user_id,organization_id, coins) => {
-    const response = await axios.post(`${API_URL}/organizations/${organization_id}/coins`, { user_id,coins });
+    const response = await api.post(`/organizations/${organization_id}/coins`, { user_id,coins });
     return response.data;
 };
 
 export const getUsersByOrganization = async (organizationId) => {
-    const response = await axios.get(`${API_URL}/organizations/${organizationId}/users`);
+    const response = await api.get(`/organizations/${organizationId}/users`);
     return response.data;
 };
 
 export const getDocumentationByOrganization = async (organizationId) => {
-    const response = await axios.get(`${API_URL}/organizations/${organizationId}/documentation`);
+    const response = await api.get(`/organizations/${organizationId}/documentation`);
     return response.data;
 };
 
@@ -81,7 +105,7 @@ export const leaveOrganization = async (user_id, org_id) => {
 
 export async function addUserToOrganization(organization_id, admin_id, user_id) {
     try {
-        const response = await axios.post(`${API_URL}/organizations/${organization_id}/users/${user_id}`, { admin_id });
+        const response = await api.post(`/organizations/${organization_id}/users/${user_id}`, { admin_id });
         return response.data;
     } catch (error) {
         throw error;

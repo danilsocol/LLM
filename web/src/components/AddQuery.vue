@@ -18,14 +18,18 @@
 </template>
 
 <script>
-import {addQuery} from "@/services/api";
-import { getUser } from "@/services/auth";
+import {addQuery, getCurrentUser} from "@/services/api";
+import {User} from "@/models/models.js";
 
 export default {
+  async mounted() {
+    this.user = await getCurrentUser();
+  },
   data() {
     return {
       documentId: null,
-      question: ""
+      question: "",
+      user: User,
     };
   },
   methods: {
@@ -33,7 +37,6 @@ export default {
       this.$router.go(-1);
     },
     async submitForm() {
-      const user = getUser();
       const organizationId = parseInt(this.$route.params.organizationId);
 
       try {
@@ -41,7 +44,7 @@ export default {
           return alert("Вопрос не должен быть пустым!");
         }
         await addQuery({
-          user_id: user.id,
+          user_id: this.user.id,
           organization_id: organizationId,
           document_id: this.documentId,
           question: this.question

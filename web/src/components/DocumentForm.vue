@@ -17,8 +17,8 @@
 </template>
 
 <script>
-import { getUser } from "@/services/auth.js";
-import { Document } from "@/models/models.js";
+import {Document, User} from "@/models/models.js";
+import {getCurrentUser} from "@/services/api.js";
 export default {
   props: {
     document: {
@@ -34,9 +34,11 @@ export default {
     return {
       documentTitle: '',
       documentContent: '',
+      user: User,
     };
   },
-  mounted() {
+  async mounted() {
+    this.user = await getCurrentUser();
     if (this.document && this.isEditMode) {
       this.documentTitle = this.document.title;
       this.documentContent = this.document.content;
@@ -47,13 +49,12 @@ export default {
       this.$router.go(-1);
     },
     submitForm() {
-      const admin = getUser();
       if (this.documentTitle && this.documentContent) {
         const newDocumentData = {
           title: this.documentTitle,
           content: this.documentContent,
           organizationId: parseInt(this.$route.params.organizationId),
-          modifiedById: admin.id
+          modifiedById: this.user.id
         };
         if (this.isEditMode && this.document) {
           this.$emit('document-updated', {

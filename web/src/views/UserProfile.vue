@@ -40,11 +40,11 @@
 </template>
 
 <script>
-import { getUser , removeUser , setUser  } from '../services/auth';
+import { removeToken , setToken  } from '../services/auth';
 import { Organization, User, UserRole } from "@/models/models.js";
 import {
   addCoinsToOrganization,
-  createOrganization, deleteOrganization,
+  createOrganization, deleteOrganization, getCurrentUser,
   getDocumentationByOrganization,
   getOrganizationByOrgId,
   getUsersByOrganization, leaveOrganization
@@ -63,7 +63,7 @@ export default {
     };
   },
   async mounted() {
-    this.user = await getUser ();
+    this.user = await getCurrentUser ();
     console.log(this.user);
     if (this.user.organization_id) {
       try {
@@ -79,11 +79,9 @@ export default {
       const organizationName = prompt("Введите название вашей организации:");
       if (organizationName) {
         try {
-          const org = await createOrganization({ name: organizationName, coins: 0 }, await getUser ().id);
+          const org = await createOrganization({ name: organizationName, coins: 0 }, this.user.id);
           this.organization = org;
-          this.user.role = UserRole.ORG_ADMIN;
-          this.user.organization_id = org.id;
-          setUser(this.user);
+          this.user = await getCurrentUser ();
           alert("Организация успешно создана!");
         } catch (error) {
           console.error("Ошибка создания организации:", error);
@@ -95,10 +93,8 @@ export default {
       try {
         await leaveOrganization(this.user.id, this.organization.id);
         alert("Вы вышли из организации.");
-        this.user.organization_id = null;
         this.organization = null
-        this.user.role = UserRole.NONE;
-        setUser (this.user);
+        this.user = await getCurrentUser ();
       } catch (error) {
         console.error("Ошибка при выходе из организации:", error);
         alert("Ошибка при выходе из организации. Попробуйте позже.");
@@ -110,9 +106,7 @@ export default {
           await deleteOrganization(this.organization.id);
           alert("Организация успешно удалена.");
           this.organization = null;
-          this.user.organization_id = null;
-          this.user.role = UserRole.NONE;
-          setUser (this.user);
+          this.user = await getCurrentUser ();
         } catch (error) {
           console.error("Ошибка при удалении организации:", error);
           alert("Ошибка при удалении организации. Попробуйте позже.");
@@ -156,7 +150,7 @@ export default {
       });
     },
     async logout() {
-      removeUser ();
+      removeToken ();
       this.$router.push('/');
     }
   }

@@ -25,8 +25,7 @@
 </template>
 
 <script>
-import { getUser } from "@/services/auth";
-import { getQueriesByUserId } from "@/services/api";
+import {getCurrentUser, getQueriesByUserId} from "@/services/api";
 
 
 export default {
@@ -36,7 +35,7 @@ export default {
     };
   },
   async mounted() {
-    const user = getUser();
+    const user = await getCurrentUser();
     try {
       this.queries = await getQueriesByUserId(user.id);
     } catch (error) {

@@ -24,7 +24,7 @@
 
 <script>
 import { register } from '../services/api';
-import { setUser } from '../services/auth';
+import { setToken } from '../services/auth';
 import {User} from "@/models/models.js";
 
 export default {
@@ -42,14 +42,17 @@ export default {
       this.loading = true;
       try {
         const response = await register(this.email, this.password);
-        const user = new User(
-            response.id,
-            response.role,
-            response.email,
-            response.password,
-            response.organizationId || null
-        );
-        setUser(user);
+        // const user = new User(
+        //     response.id,
+        //     response.role,
+        //     response.email,
+        //     response.password,
+        //     response.organizationId || null
+        // );
+        console.log(response)
+        console.log(response.access_token)
+        setToken(response.access_token);
+
         this.$router.push('/');
       } catch (error) {
         console.error("Ошибка регистрации:", error);
