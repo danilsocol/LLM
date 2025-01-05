@@ -46,7 +46,6 @@ def add_user_to_organization(user_id: int, organization_id: int, session) -> Non
         user.role = UserRole.USER
         session.commit()
         session.refresh(user)
-        return user
 
 def remove_user_from_organization(user_id: int, session) -> None:
     user = session.get(User, user_id)
