@@ -1,3 +1,4 @@
+from bcrypt import hashpw, gensalt, checkpw
 from sqlalchemy.exc import NoResultFound
 
 from models.Enum.user_role import UserRole
@@ -31,7 +32,9 @@ def change_user_role(id: int, new_role: UserRole, session) -> Optional[User]:
     return None
 
 def register_user(email: str, password: str, session) -> User:
-    new_user = User(email = email, password = password)
+    hashed_password = hashpw(password.encode('utf-8'), gensalt())
+    new_user = User(email = email, password = hashed_password)
+    print(1, email, password, new_user)
     session.add(new_user)
     session.commit()
     session.refresh(new_user)
@@ -39,6 +42,7 @@ def register_user(email: str, password: str, session) -> User:
 
 def login_user(email: str, password: str, session) -> Optional[User]:
     user = session.query(User).filter(User.email == email).first()
-    if user and user.password == password:
+    print(2,email,password,user)
+    if user and checkpw(password.encode('utf-8'), user.password):
         return user
     return None

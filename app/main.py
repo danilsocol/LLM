@@ -9,7 +9,16 @@ if __name__ == "main":
     init_db()
     print('Init db has been success')
 
-app = FastAPI()
+app = FastAPI(    title="LLM",
+    description="API description",
+    version="1.0.0",
+    openapi_url="/api/v1/openapi.json",
+    docs_url="/api/v1/docs",
+    redoc_url="/api/v1/redoc",
+    swagger_ui_oauth2_redirect_url="/api/v1/docs/oauth2-redirect",
+    swagger_ui_init_oauth={
+        "usePkceWithAuthorizationCodeGrant": True
+    })
 
 app.add_middleware(
     CORSMiddleware,

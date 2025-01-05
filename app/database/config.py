@@ -1,6 +1,3 @@
-import os
-
-from dotenv import dotenv_values
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 from typing import Optional
@@ -12,6 +9,10 @@ class Settings(BaseSettings):
     DB_USER: Optional[str] = None
     DB_PASS: Optional[str] = None
     DB_NAME: Optional[str] = None
+
+    SECRET_KEY: Optional[str] = None
+    ALGORITHM: Optional[str] = None
+    ACCESS_TOKEN_EXPIRE_MINUTES: Optional[str] = None
 
     @property
     def DATABASE_URL(self):

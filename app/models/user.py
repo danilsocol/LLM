@@ -14,7 +14,7 @@ class User(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     role: UserRole = Field(default=UserRole.NONE)
     email: str = Field(index=True, unique=True)
-    password: str
+    password: bytes
 
     organization_id: Optional[int] = Field(default=None, foreign_key="organization.id", index=True)
     organization: Optional["Organization"] = Relationship(back_populates="users")
