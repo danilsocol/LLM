@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from api import (user_controller, organization_controller, document_controller, query_controller,
-                 transactions_contoller)
+                 transactions_contoller,service_controller)
 from database.database import init_db
 
 if __name__ == "main":
@@ -33,6 +33,7 @@ app.include_router(organization_controller.router, prefix="/api")
 app.include_router(document_controller.router, prefix="/api")
 app.include_router(query_controller.router, prefix="/api")
 app.include_router(transactions_contoller.router, prefix="/api")
+app.include_router(service_controller.router, prefix="/api")
 
 @app.get("/")
 async def root():

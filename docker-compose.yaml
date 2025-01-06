@@ -11,13 +11,12 @@ services:
       - "8080:8080"
     depends_on:
       - db
-  # web:
-  #   build: ./nginx
-  #   ports:
-  #     - 80:80
-  #     - 443:443
-  #   depends_on:
-  #     - app
+  web:
+    build: ./web/
+    ports:
+     - "5173:5173"
+    depends_on:
+     - app
   db:
     image: postgres:16-alpine
     volumes:
