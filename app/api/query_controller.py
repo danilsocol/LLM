@@ -1,3 +1,4 @@
+import threading
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -19,6 +20,10 @@ from models.organization import Organization
 from models.Enum.transaction_type import TransactionType
 from models.transaction import Transaction
 
+from rabbitmq_producer import process_query
+
+from models.document import Document
+
 router = APIRouter()
 
 
@@ -28,8 +33,12 @@ async def create_query(query_data: Query, token_data: TokenData = Depends(verify
         Organization.id == query_data.organization_id
     ).first()
 
-    if not organization:
-        raise HTTPException(status_code=404, detail="Organization not found")
+    doc: Document = session.query(Document).filter(
+        Document.id == query_data.document_id
+    ).first()
+
+    if not organization or not doc:
+        raise HTTPException(status_code=404, detail="Organization or Document not found")
 
     if organization.coins < 20:
         raise HTTPException(
@@ -53,6 +62,11 @@ async def create_query(query_data: Query, token_data: TokenData = Depends(verify
         session.add(organization)
         session.commit()
         session.refresh(query)
+
+        process_query(query_data.user_id,doc.content,query_data.question,query.id)
+
+        # threading.Thread(target=process_query, args=(query_data)).start()
+
         return query
     except Exception as e:
         session.rollback()

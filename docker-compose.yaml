@@ -1,5 +1,15 @@
 version: "3"
 services:
+  bertanswer1:
+    build: ./BertAnswer/
+    depends_on:
+      - rabbitmq
+
+  bertanswer2:
+    build: ./BertAnswer/
+    depends_on:
+      - rabbitmq
+
   app:
     build: ./app/
     image: event-planner-api:latest 
@@ -11,12 +21,17 @@ services:
       - "8080:8080"
     depends_on:
       - db
+      - rabbitmq
+      - bertanswer1
+      - bertanswer2
+
   web:
     build: ./web/
     ports:
      - "5173:5173"
     depends_on:
      - app
+
   db:
     image: postgres:16-alpine
     volumes:
@@ -30,6 +45,12 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=LLM
 
-# volumes:
-#   pgdata:
-#     driver: local
+  rabbitmq:
+      image: rabbitmq:3-management
+      ports:
+        - "5672:5672"
+        - "15672:15672"
+      environment:
+        - RABBITMQ_DEFAULT_USER=guest
+        - RABBITMQ_DEFAULT_PASS=guest
+
