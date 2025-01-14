@@ -3,12 +3,14 @@ services:
   bertanswer1:
     build: ./BertAnswer/
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
 
   bertanswer2:
     build: ./BertAnswer/
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
 
   app:
     build: ./app/
@@ -20,15 +22,15 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - db
-      - rabbitmq
-      - bertanswer1
-      - bertanswer2
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   web:
     build: ./web/
     ports:
-     - "5173:5173"
+     - "8003:8003"
     depends_on:
      - app
 
@@ -44,6 +46,11 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=LLM
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
       image: rabbitmq:3-management
@@ -53,4 +60,9 @@ services:
       environment:
         - RABBITMQ_DEFAULT_USER=guest
         - RABBITMQ_DEFAULT_PASS=guest
+      healthcheck:
+        test: [ "CMD", "rabbitmqctl", "status" ]
+        interval: 10s
+        timeout: 5s
+        retries: 5
 
